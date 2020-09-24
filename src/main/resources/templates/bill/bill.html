@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="https://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Home</title>
+    <link href="/webjars/bootstrap/4.5.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/webjars/open-iconic/1.1.1/font/css/open-iconic-bootstrap.min.css" rel="stylesheet">
+    <link th:href="@{/css/main.css}"  rel="stylesheet">
+</head>
+<body>
+
+<nav class="navbar navbar-dark bg-dark navbar-expand-lg">
+    <div class="container">
+        <!--<span class="navbar-brand" th:inline="text">Hello [[${#httpServletRequest.remoteUser}]]!</span>-->
+        <a th:href="@{/home}"><span class="navbar-brand">BillTracker</span></a>
+
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarText" aria-controls="navbarText" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarText">
+            <ul class="navbar-nav mr-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="/record">Records</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/bill">Bills</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/item">Items</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/person">Persons</a>
+                </li>
+            </ul>
+            <form class="form-inline my-2 my-lg-0" th:action="@{/logout}" method="post">
+                <input class="btn btn-danger my-2 my-sm-0" type="submit" value="Logout"/>
+            </form>
+        </div>
+    </div>
+</nav>
+
+
+<div class="container">
+    <h1 class="text-center">All Bills</h1>
+    <a href="/bill/addBill" class="btn btn-success add-bills">
+        Add New Bills
+    </a>
+    <div class="alert alert-success alert-dismissible fade show" th:if="${success != null}" role="alert">
+        <!--/*@thymesVar id="success" type="java.lang.String"*/-->
+        <span th:text="${success}"></span>
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+</div>
+
+<div class="container bill-list">
+    <div th:if="${bills.isEmpty()}">
+        <h3 class="text-center">Click on Add Button to add new Bills</h3>
+    </div>
+    <div th:unless="${bills.isEmpty()}">
+        <table class="table table-hover table-responsive-sm">
+            <thead class="thead-dark">
+            <tr>
+                <th scope="col">#</th>
+                <th scope="col">Name</th>
+                <th scope="col">Date</th>
+                <th scope="col">Total</th>
+                <th scope="col">PaidBy</th>
+                <th scope="col">ShareInfo</th>
+                <th scope="col">Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="bill, i:${bills}" class="accordion collapsed" th:id="${'accordion'+i.count}" data-toggle="collapse" th:data-parent="${'accordion'+i.count}" th:href="${'collapse'+i.count}">
+                <th scope="row" th:text="${i.count}"></th>
+                <td th:text="${bill.getName()}"></td>
+                <td th:text="${bill.getDate()}"></td>
+                <td th:text="${'$'+bill.getTotal()}"></td>
+                <td th:text="${bill.personPaids[0].person.name}"></td>
+                <td>
+                    <div th:each="shareInfo: ${bill.shareInfos}">
+                        <span th:text="${shareInfo.sender.name + ' pays to ' + shareInfo.receiver.name + ' amount of $' + shareInfo.amount }"></span>
+                    </div>
+                </td>
+                <td>
+                    <a class="btn btn-primary btn-sm edit-bill" th:href="@{/bill/editBill/{id}(id=${bill.getId()})}"
+                       data-toggle="tooltip" data-placement="top" title="Edit">
+                        <span class="oi oi-pencil"></span>
+                    </a>
+                    <a class="btn btn-danger btn-sm delete-bill" th:href="@{/bill/deleteBill/{id}(id=${bill.getId()})}"
+                       data-toggle="tooltip" data-placement="top" title="Delete">
+                        <span class="oi oi-trash"></span>
+                    </a>
+                </td>
+            </tr>
+
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!--Delete Modal-->
+<div id="deleteModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="deleteModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-confirm">
+        <div class="modal-content">
+            <div class="modal-header flex-column">
+                <div class="icon-box">
+                    <i class="material-icons">&times;</i>
+                </div>
+                <h4 class="modal-title w-100">Are you sure?</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Do you really want to delete these record? This process cannot be undone.</p>
+            </div>
+            <div class="modal-footer justify-content-center">
+                <a type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</a>
+                <a class="btn btn-danger delete-btn-confirm" href="">Delete</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script src="/webjars/jquery/3.5.1/jquery.min.js"></script>
+<script src="/webjars/jquery-validation/1.19.0/jquery.validate.min.js"></script>
+<script src="/webjars/popper.js/1.12.9/umd/popper.js"></script>
+<script src="/webjars/bootstrap/4.5.0/js/bootstrap.min.js"></script>
+<script th:src="@{/js/main.js}"></script>
+
+</body>
+</html>

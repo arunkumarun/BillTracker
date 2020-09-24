@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="https://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Home</title>
+    <link href="/webjars/bootstrap/4.5.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/webjars/open-iconic/1.1.1/font/css/open-iconic-bootstrap.min.css" rel="stylesheet">
+    <link href="/css/main.css" rel="stylesheet">
+
+</head>
+<body>
+
+<nav class="navbar navbar-dark bg-dark navbar-expand-lg">
+    <div class="container">
+        <!--<span class="navbar-brand" th:inline="text">Hello [[${#httpServletRequest.remoteUser}]]!</span>-->
+        <a th:href="@{/home}"><span class="navbar-brand">BillTracker</span></a>
+
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarText" aria-controls="navbarText" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarText">
+            <ul class="navbar-nav mr-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="/record">Records</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/bill">Bills</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/item">Items</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/person">Persons</a>
+                </li>
+            </ul>
+            <form class="form-inline my-2 my-lg-0" th:action="@{/logout}" method="post">
+                <input class="btn btn-danger my-2 my-sm-0" type="submit" value="Logout"/>
+            </form>
+        </div>
+    </div>
+</nav>
+
+
+<div class="container">
+    <h1 class="text-center">All Items</h1>
+    <button type="button" class="btn btn-success add-item">
+        Add New Item
+    </button>
+    <div class="alert alert-success alert-dismissible fade show" th:if="${success != null}" role="alert">
+        <!--/*@thymesVar id="success" type="java.lang.String"*/-->
+        <span th:text="${success}"></span>
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+</div>
+<div class="container item-list">
+    <div th:if="${items.isEmpty()}">
+        <h3 class="text-center">Click on Add Button to add new Item</h3>
+    </div>
+    <div th:unless="${items.isEmpty()}">
+        <table class="table table-hover table-responsive-sm">
+            <thead class="thead-dark">
+            <tr>
+                <th scope="col">#</th>
+                <th scope="col">Name</th>
+                <th scope="col">Price</th>
+                <th scope="col">Sharing Persons</th>
+                <th scope="col">Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="item, i:${items}">
+                <th scope="row" th:text="${i.count}"></th>
+                <td th:text="${item.getName()}"></td>
+                <td th:text="'$'+${item.getPrice()}"></td>
+                <td>
+                    |
+                    <div class="d-inline" th:each="sharePerson:${item.getSharingPersons()}">
+                        <span th:text="${sharePerson.getName()+' | '}"></span>
+                    </div>
+                </td>
+                <td>
+                    <a class="btn btn-primary btn-sm edit-item" th:href="@{/item/editItem/{id}(id=${item.getId()})}">
+                        <span class="oi oi-pencil"></span> Edit
+                    </a>
+                    <a class="btn btn-danger btn-sm delete-item" th:href="@{/item/deleteItem/{id}(id=${item.getId()})}">
+                        <span class="oi oi-trash"></span> Delete
+                    </a>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+
+<!--Add Modal-->
+<div class="modal fade" id="addNewItemModal" tabindex="-1" role="dialog" aria-labelledby="addNewItemModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4>Add New Item</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="addItemForm" th:action="@{/item/addItem}" th:object="${formItem}" method="post" novalidate>
+                    <div class="form-group">
+                        <label class="form-control-label" for="name">Name:</label>
+                        <input type="text" class="form-control" placeholder="Name" id="name" th:field="*{name}" name="name" required>
+                        <div class="invalid-feedback">Enter valid Name</div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-control-label" for="price">Price:</label>
+                        <input type="number" step=".01" class="form-control" placeholder="Price" id="price" th:field="*{price}" name="price" required>
+                        <div class="invalid-feedback">Enter valid Price</div>
+                    </div>
+                    <div class="form-group">
+                        <div class="form-check form-check-inline" th:each="person:${persons}">
+                            <input class="form-check-input person-checkbox" type="checkbox" th:field="*{sharingPersons}" th:id="${person.getId()}" th:value="${person}" name="sharingPersons" required>
+                            <label class="form-check-label" th:for="${person.getId()}" th:text="${person.getName()}"></label>
+                        </div>
+                    </div>
+
+                    <button class="btn btn-success" type="submit">Add</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!--Edit Modal-->
+<div class="modal fade" id="editNewItemModal" tabindex="-1" role="dialog" aria-labelledby="editNewItemModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4>Edit New Item</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="editItemForm" th:action="@{/item/editItem}" th:object="${formItem}" method="post" novalidate>
+                    <input type="hidden" id="idEdit" th:field="*{id}" name="id">
+                    <div class="form-group">
+                        <label class="form-control-label" for="nameEdit">Name:</label>
+                        <input type="text" class="form-control" placeholder="Name" id="nameEdit" th:field="*{name}" name="name" required>
+                        <div class="invalid-feedback">Enter valid Name</div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-control-label" for="priceEdit">Price:</label>
+                        <input type="number" step=".01" class="form-control" placeholder="Price" id="priceEdit" th:field="*{price}" name="price" required>
+                        <div class="invalid-feedback">Enter valid Price</div>
+                    </div>
+                    <div class="form-group">
+                        <div class="form-check form-check-inline" th:each="person:${persons}">
+                            <input class="form-check-input person-checkbox" type="checkbox" th:field="*{sharingPersons}" th:id="${person.getId() + 'Edit'}" th:value="${person}">
+                            <label class="form-check-label" th:for="${person.getId()+ 'Edit'}" th:text="${person.getName()}"></label>
+                        </div>
+                    </div>
+
+                    <button class="btn btn-success" type="submit">Update</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!--Delete Modal-->
+<div id="deleteModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="deleteModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-confirm">
+        <div class="modal-content">
+            <div class="modal-header flex-column">
+                <div class="icon-box">
+                    <i class="oi oi-x"></i>
+                </div>
+                <h4 class="modal-title w-100">Are you sure?</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Do you really want to delete these record? This process cannot be undone.</p>
+            </div>
+            <div class="modal-footer justify-content-center">
+                <a type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</a>
+                <a class="btn btn-danger delete-btn-confirm" href="">Delete</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script src="/webjars/jquery/3.5.1/jquery.min.js"></script>
+<script src="/webjars/jquery-validation/1.19.0/jquery.validate.min.js"></script>
+<script src="/webjars/popper.js/1.12.9/umd/popper.js"></script>
+<script src="/webjars/bootstrap/4.5.0/js/bootstrap.min.js"></script>
+<script src="/js/main.js"></script>
+
+</body>
+</html>

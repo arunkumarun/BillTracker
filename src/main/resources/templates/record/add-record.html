@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="https://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Home</title>
+    <link href="/webjars/bootstrap/4.5.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/webjars/open-iconic/1.1.1/font/css/open-iconic-bootstrap.min.css" rel="stylesheet">
+    <link th:href="@{/css/main.css}" rel="stylesheet">
+
+</head>
+<body>
+
+<nav class="navbar navbar-dark bg-dark navbar-expand-lg">
+    <div class="container">
+        <!--<span class="navbar-brand" th:inline="text">Hello [[${#httpServletRequest.remoteUser}]]!</span>-->
+        <a th:href="@{/home}"><span class="navbar-brand">BillTracker</span></a>
+
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarText"
+                aria-controls="navbarText" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarText">
+            <ul class="navbar-nav mr-auto">
+                <li class="nav-item">
+                    <a class="nav-link active" href="/record">Records<span class="sr-only">(current)</span></a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/bill">Bills</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/item">Items</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/person">Persons</a>
+                </li>
+            </ul>
+            <form class="form-inline my-2 my-lg-0" th:action="@{/logout}" method="post">
+                <input class="btn btn-danger my-2 my-sm-0" type="submit" value="Logout"/>
+            </form>
+        </div>
+    </div>
+</nav>
+
+
+<div class="container">
+    <h1 class="text-center add-record-heading">Add Record</h1>
+</div>
+
+<div class="container record-list">
+
+    <form id="addRecordForm" th:action="@{/record/addRecord}" th:object="${formRecord}" method="post" novalidate>
+        <input type="hidden" th:field="*{id}">
+        <div class="form-row">
+            <div class="form-group col-md-6">
+                <label class="form-control-label" for="dateFrom">Bill Date From:</label>
+                <input type="date" class="form-control" th:field="*{dateFrom}" placeholder="Date" id="dateFrom"
+                       th:classappend="${#fields.hasErrors('dateFrom')}? 'is-invalid'"
+                       required>
+                <div th:if="${#fields.hasErrors('dateFrom')}" th:errors="*{dateFrom}" class="invalid-feedback">
+                    Select valid Date
+                </div>
+            </div>
+            <div class="form-group col-md-6">
+                <label class="form-control-label" for="dateTo">Bill Date To:</label>
+                <input type="date" class="form-control" th:field="*{dateTo}" placeholder="Date" id="dateTo"
+                       th:classappend="${#fields.hasErrors('dateTo')}? 'is-invalid'"
+                       required>
+                <div th:if="${#fields.hasErrors('dateTo')}" th:errors="*{dateTo}" class="invalid-feedback">Select valid
+                    Date
+                </div>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <button type="submit" class="btn btn-success btn-block" name="searchBill" text="searchBill">
+                <span class="oi oi-magnifying-glass"></span>
+                Search Bills
+            </button>
+        </div>
+
+        <div class="form-row">
+            <div th:if="*{bills.isEmpty()}">
+                <h3 class="text-center">No Bills Found</h3>
+            </div>
+            <div th:unless="*{bills.isEmpty()}">
+                <table class="table table-hover table-responsive-sm">
+                    <thead class="thead-dark">
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">Name</th>
+                        <th scope="col">Date</th>
+                        <th scope="col">Total</th>
+                        <th scope="col">PaidBy</th>
+                        <th scope="col">ShareInfo</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="bill, i:*{bills}">
+                        <th scope="row" th:text="${i.count}"></th>
+                        <td th:text="${bill.getName()}"></td>
+                        <td th:text="${bill.getDate()}"></td>
+                        <td th:text="${'$'+bill.getTotal()}"></td>
+                        <td th:text="${bill.personPaids[0].person.name}"></td>
+                        <td>
+                            <div th:each="shareInfo: ${bill.shareInfos}">
+                                <span th:text="${shareInfo.sender.name + ' pays to ' + shareInfo.receiver.name + ' amount of $' + shareInfo.amount }"></span>
+                            </div>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div th:unless="*{shareInfos.isEmpty()}">
+                <table class="table table-hover table-responsive-sm">
+                    <thead class="thead-dark">
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">Sender</th>
+                        <th scope="col">Receiver</th>
+                        <th scope="col">Amount</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="shareInfo, is:*{shareInfos}">
+                        <th scope="row" th:text="${is.count}"></th>
+                        <td th:text="${shareInfo.sender.name}"></td>
+                        <td th:text="${shareInfo.receiver.name}"></td>
+                        <td th:text="${'$'+shareInfo.amount}"></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <button class="btn btn-success" type="submit">Add Record</button>
+    </form>
+
+</div>
+
+
+<script src="/webjars/jquery/3.5.1/jquery.min.js"></script>
+<script src="/webjars/jquery-validation/1.19.0/jquery.validate.min.js"></script>
+<script src="/webjars/popper.js/1.12.9/umd/popper.js"></script>
+<script src="/webjars/bootstrap/4.5.0/js/bootstrap.min.js"></script>
+<script th:src="@{/js/main.js}"></script>
+
+</body>
+</html>
